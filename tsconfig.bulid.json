@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./dist",
+    "incremental": true,
+    "composite": true,
+    "tsBuildInfoFile": "./build/.tsbuildinfo",
+    "rewriteRelativeImportExtensions": true,
+    "removeComments": true,
+    "importHelpers": true,
+    "downlevelIteration": true,
+    "noEmitHelpers": true,
+    "noEmitOnError": true,
+    "newLine": "lf",
+    "preserveConstEnums": true
+  }
+}

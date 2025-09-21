@@ -1,0 +1,83 @@
+{
+  "name": "auto-deploy-sh",
+  "version": "1.0.0",
+  "description": "Automated Docker deployment tool",
+  "bin": {
+    "auto-deploy-sh": "./dist/bin/index.js"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
+  "type": "module",
+  "main": "./dist/bin/index.js",
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.bulid.json",
+    "clean": "rimraf dist build",
+    "deploy": "node ./ts-node bin/index.ts",
+    "lint:doc": "prettier **/*.md --check",
+    "lint:doc:fix": "prettier **/*.md --write",
+    "lint:eslint": "eslint --cache --ext .ts,.vue,.js,.jsx,.tsx,.json",
+    "lint:eslint:fix": "eslint --cache --ext .ts,.vue,.js,.jsx,.tsx,.json --fix",
+    "prepare": "husky",
+    "prepack": "npm run build",
+    "postbuild": "node ./postbuild.js"
+  },
+  "keywords": [
+    "Automated",
+    "Lower deployment threshold",
+    "deployment",
+    "Minimalist configuration"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yotomum-ml/auto-deploy-sh.git"
+  },
+  "author": "yotomum_ml",
+  "license": "ISC",
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx,vue,css,json}": [
+      "eslint --no-warn-ignored"
+    ],
+    "*.md": [
+      "prettier --check --no-warn-ignored"
+    ]
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "chalk": "^5.6.2",
+    "execa": "^9.6.0",
+    "fs-extra": "^11.3.1",
+    "inquirer": "^12.9.6",
+    "node-ssh": "^13.2.1",
+    "ora": "^8.2.0",
+    "readline-sync": "^1.4.10",
+    "ssh2": "^1.17.0",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/css": "^0.8.1",
+    "@eslint/js": "^9.29.0",
+    "@eslint/json": "^0.12.0",
+    "@stylistic/eslint-plugin": "^4.4.1",
+    "@types/archiver": "^6.0.3",
+    "@types/fs-extra": "^11.0.4",
+    "auto-deploy-sh": "file:auto-deploy-sh-1.0.0.tgz",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.1",
+    "eslint-plugin-vue": "^10.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "node-notifier": "^10.0.1",
+    "rimraf": "^5.0.10",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.1"
+  }
+}

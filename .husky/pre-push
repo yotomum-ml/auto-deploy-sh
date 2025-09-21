@@ -1,0 +1,11 @@
+. "$(dirname "$0")/notify.sh"
+
+remote_name="$1"
+remote_url=$(git remote get-url "$remote_name")
+target_url="https://github.com/yotomum-ml/auto-deploy-sh.git"
+
+if [ "$remote_url" != "$target_url" ]; then
+  show_erro_msg "Push rejected: not allowed to push to the remote warehouse $remote_url"
+  show_error_notification "Push rejected" "not allowed to push to the remote warehouse $remote_url"
+  exit 1
+fi

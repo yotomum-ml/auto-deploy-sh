@@ -1,0 +1,72 @@
+{
+  "compilerOptions": {
+    /* Visit https://aka.ms/tsconfig to read more about this file */
+    "noEmit": true,
+    "rootDirs": [
+      "."
+    ],
+    "baseUrl": "./",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": [
+      "ESNext",
+      "ES5",
+      "ES6",
+      "DOM"
+    ],
+    // 兼容不同扩展类型
+    "resolveJsonModule": true,
+    "allowArbitraryExtensions": true,
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "checkJs": false,
+    // 兼容ES模式
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "importsNotUsedAsValues": "remove",
+    "erasableSyntaxOnly": true,
+    // 兼容不同运行环境和老版本
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "preserveSymlinks": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": true,
+    "allowUmdGlobalAccess": true,
+    // typeScript 严格检查范围
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "allowUnreachableCode": true,
+    "skipLibCheck": true
+  },
+  "types": ["node"],
+  "include": [
+    "**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "./.commitlintrc.js",
+    "eslint.config.js",
+    ".husky",
+    "ts-node.js",
+    "postbuild.js"
+  ],
+  "references": [],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "ESNext"
+    },
+    "esm": true
+  }
+}
