@@ -57,7 +57,7 @@ Run:
 npm run deploy
 ```
 
-### 全局配置
+### Global Configuration
 
 Download: `npm install auto-deploy-sh -g`
 Run in the root directory of the project that needs to be deployed: `auto-deploy-sh`
