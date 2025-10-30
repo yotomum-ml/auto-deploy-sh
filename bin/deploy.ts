@@ -153,12 +153,12 @@ export class Deploy {
       const localSize = state.size
 
       await ora.start(
-        '📤 开始上传...',
+        '📤 Start uploading...',
         async () => {
           await ssh.putFile(uploadPath, this.remotePath)
         },
         status => {
-          if (status) return `文件上传完成`
+          if (status) return `File upload complete.`
           else {
             exit(1)
             return chalk.error(`exit code: 1`)
@@ -170,17 +170,17 @@ export class Deploy {
         `test -f "${this.remotePath}" && echo "yes" || echo "no"`,
       )
       if (exists.stdout.trim() !== 'yes') {
-        log.error('文件上传检测失败')
+        log.error('File upload failed.')
         throw new Error()
       }
       const sizeResult = await ssh.execCommand(`stat -c %s "${this.remotePath}"`)
       const remoteSize = parseInt(sizeResult.stdout.trim(), 10)
       if (isNaN(remoteSize)) {
-        log.error('无法获取远程文件大小')
+        log.error('Unable to obtain remote file size')
         throw new Error()
       }
       if (remoteSize !== localSize && remoteSize < localSize - 10) {
-        log.error(`文件大小不匹配: 本地=${localSize}, 远程=${remoteSize}`)
+        log.error(`File size mismatch: local=${localSize}, remote=${remoteSize}`)
         throw new Error()
       }
     } else {
@@ -229,19 +229,19 @@ export class Deploy {
           mkdir -p "${TARGET_DIR}"
 
           if [ ! -f "${REMOTE_PATH}" ]; then
-            echo "❌ 错误：压缩包不存在: ${REMOTE_PATH}";
+            echo "❌ Error: Compressed file does not exist.: ${REMOTE_PATH}";
             exit 1
           fi
           tar -xzf "${REMOTE_PATH}" -C "${TARGET_DIR}";
       `,
       )
 
-      // 构建容器 @TODO ocker push 到远端的服务器,然后再通过远端的服务器进行拉取，这个平台可以进行版本控制和安全检测
+      // 构建容器 @TODO docker push 到远端的服务器,然后再通过远端的服务器进行拉取，这个平台可以进行版本控制和安全检测
       await this.execCommand(
         ssh,
         {
-          startMsg: `🐳 构建镜像: ${IMAGE_TAG}...`,
-          succMsg: `🐳 构建镜像: ${IMAGE_TAG}成功.`,
+          startMsg: `🐳 Build image: ${IMAGE_TAG}...`,
+          succMsg: `🐳 Build image: ${IMAGE_TAG} success.`,
         },
         `
         cd "${REMOTEAPPPATH}"
@@ -253,34 +253,58 @@ export class Deploy {
       await this.execCommand(
         ssh,
         {
-          startMsg: `🔄 停止并清理旧容器: ${CONTAINER_NAME}...`,
-          succMsg: `旧容器已经清理成功.`,
+          startMsg: `🔄 Stop and clean the old container.: ${CONTAINER_NAME}...`,
+          succMsg: `The old container has been successfully cleaned.`,
         },
         `
         if docker inspect "${CONTAINER_NAME}" >/dev/null 2>&1; then
           docker stop "${CONTAINER_NAME}";
           docker rm "${CONTAINER_NAME}";
         else
-          echo "ℹ️  容器 ${CONTAINER_NAME} 不存在，跳过清理";
+          echo "ℹ️  container ${CONTAINER_NAME}. Does not exist, skip cleaning.";
         fi
       `,
       )
 
       // 启动容器
+      let optionsCLI = `--name ${CONTAINER_NAME} -p ${this.config.BindPorts}`
+      const options = this.config.Options
+      if (options) {
+        const optionsKeys = Object.keys(options)
+        if (optionsKeys.length > 0) {
+          for (let i = 0; i < optionsKeys.length; ++i) {
+            const key = optionsKeys[i]
+            switch (key) {
+              case 'volumes': {
+                let volumes = options.volumes.map(volume => `-v ${volume}`).join(' ')
+                optionsCLI += ' ' + volumes
+                break
+              }
+              case 'networks': {
+                optionsCLI += ` --network ${options.networks}`
+                break
+              }
+              default:
+                break
+            }
+          }
+        }
+      }
+      optionsCLI += ` ${this.config.imageTag}`
       await this.execCommand(
         ssh,
         {
-          startMsg: `🐳 启动容器: ${CONTAINER_NAME}...`,
-          succMsg: `🐳 启动容器成功.`,
+          startMsg: `🐳 Start container: ${CONTAINER_NAME}...`,
+          succMsg: `🐳 Container started successfully.`,
         },
         `
-        docker run -d --name ${CONTAINER_NAME} -p ${this.config.BindPorts} ${IMAGE_TAG}
+        docker run -d ${optionsCLI}
       `,
       )
 
-      log.done('✔ 部署完成')
+      log.done('✔ Deployment completed.')
     } catch {
-      log.error('✖ 部署失败')
+      log.error('✖ Deployment failed.')
     } finally {
       await this.clear(ssh)
     }
@@ -290,5 +314,6 @@ export class Deploy {
     await ssh.execCommand(`rm -f ${this.remotePath}`)
     await ssh.execCommand(`rm -rf ${this.REMOTEAPPPATH}/${this.config.containerName}`)
     await ssh.execCommand(`docker image prune -f`) // 清理悬空镜像
+    // 清空悬空的network
   }
 }

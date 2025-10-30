@@ -5,28 +5,29 @@ import path from 'path'
 const configMethod: { [key: string]: inquirerOptions } = {
   host: {
     type: 'input',
-    message: '远程服务器 IP 或域名: ',
+    message: 'Remote server IP or domain name: ',
   },
   port: {
     type: 'number',
-    message: 'SSH 端口: ',
+    message: 'SSH port: ',
   },
   user: {
     type: 'input',
-    message: '用户名: ',
+    message: 'username: ',
   },
   password: {
     type: 'input',
-    message: '密码: ',
+    message: 'password: ',
   },
   beforLaunch: {
     type: 'input',
-    message: '项目发布前的前置命令(befor launch) 多个以 , 隔开: ',
+    message: 'Before launch (multiple commands separated by , ): ',
     handleFn: (value: string): string[] => value.split(','),
   },
   dockerBuildFiles: {
     type: 'input',
-    message: 'docker构建所需的文件相对根目录的路径(多个 , 隔开): ',
+    message:
+      'Path to the file relative to the root directory required for Docker build (separated by , ): ',
     handleFn: (value: string): string[] => value.split(','),
   },
   imageTag: {
@@ -40,6 +41,17 @@ const configMethod: { [key: string]: inquirerOptions } = {
   BindPorts: {
     type: 'input',
     message: 'Bind Ports(such as 8080:8080): ',
+  },
+}
+const optionsMethod: { [key: string]: inquirerOptions } = {
+  volumes: {
+    type: 'input',
+    message: 'Multiple volumes are divided into by , : ',
+    handleFn: (value: string): string[] => value.split(','),
+  },
+  networks: {
+    type: 'input',
+    message: 'Bound network: ',
   },
 }
 
@@ -56,6 +68,27 @@ export async function createConfig(rootPath: string) {
         }
     const value = (await inquirer.invoke(configMethod[key]!)) as string
     config[key] = fn(value)
+  }
+  // Extended options
+  const options = await inquirer.invoke({
+    type: 'checkbox',
+    message: 'Select other options as needed.',
+    choices: [
+      { name: 'Volumes', value: 'volumes' },
+      { name: 'Networks', value: 'networks' },
+    ],
+  })
+  config['Options'] = {}
+  for (let i = 0; i < options.length; ++i) {
+    const key = options[i]
+    const fn = Object.hasOwn(optionsMethod[key]!, 'handleFn')
+      ? optionsMethod[key]!.handleFn
+      : (value: any): any => {
+          if (typeof value === 'string') return value.trim()
+          else return value
+        }
+    const value = (await inquirer.invoke(optionsMethod[key]!)) as string
+    config['Options'][key] = fn(value)
   }
   await fs.writeFileSync(
     path.resolve(rootPath, 'deploy-config.json'),

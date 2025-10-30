@@ -31,9 +31,9 @@ async function deploySSH() {
           password: config.password,
         }),
       status => {
-        if (status) return `SSH连接成功！`
+        if (status) return `SSH connection successful!`
         else {
-          log.error('SSH连接失败！')
+          log.error('SSH connection failed!')
           exit(1)
           return chalk.error(`exit code: 1`)
         }
@@ -51,7 +51,9 @@ async function deploySSH() {
       ssh.dispose()
     }
   } else {
-    log.error(`⚠️ 在根目录下未找到配置文件 ${CONFIG_FILE}，将引导创建... `)
+    log.error(
+      `⚠️ No configuration file found in the root directory ${CONFIG_FILE}. Will guide the creation... `,
+    )
     await createConfig(process.cwd())
     deploySSH()
   }

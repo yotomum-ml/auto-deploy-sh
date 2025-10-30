@@ -10,6 +10,10 @@ export type sshConfig = {
   imageTag: string
   containerName: string
   BindPorts: string
+  Options: {
+    volumes: string[]
+    networks: string
+  }
 }
 
 export type fileData = string | NodeJS.ArrayBufferView
