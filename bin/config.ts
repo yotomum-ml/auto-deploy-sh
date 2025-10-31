@@ -24,6 +24,10 @@ const configMethod: { [key: string]: inquirerOptions } = {
     message: 'Before launch (multiple commands separated by , ): ',
     handleFn: (value: string): string[] => value.split(','),
   },
+  Dockerfile: {
+    type: 'input',
+    message: 'Select the Dockerfile you need to execute.',
+  },
   dockerBuildFiles: {
     type: 'input',
     message:

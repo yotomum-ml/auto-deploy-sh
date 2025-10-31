@@ -6,6 +6,7 @@ export type sshConfig = {
   user: string
   password: string
   beforLaunch: string[]
+  Dockerfile: string
   dockerBuildFiles: string[]
   imageTag: string
   containerName: string

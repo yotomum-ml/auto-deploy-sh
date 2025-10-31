@@ -82,6 +82,11 @@ export class Deploy {
     if (this.config.dockerBuildFiles && this.config.dockerBuildFiles.length > 0) {
       let dockerfileFlag = false,
         dockerignoreFlag = false
+      if (this.config.Dockerfile && this.config.Dockerfile.length > 0) {
+        // 单独配置了Dockerfile
+        dockerfileFlag = true
+        this.config.dockerBuildFiles.push(this.config.Dockerfile)
+      }
       for (let i = 0; i < this.config.dockerBuildFiles.length; ++i) {
         const file = this.config.dockerBuildFiles[i] as string
         if (/\bDockerfile\b/.test(file)) {
@@ -138,6 +143,10 @@ export class Deploy {
       if (await fs.isDirectory(file)) {
         archive.directory(file, fileName)
       } else {
+        if (fileName === this.config.Dockerfile) {
+          archive.file(file, { name: 'Dockerfile' })
+          continue
+        }
         archive.file(file, { name: fileName })
       }
     }
