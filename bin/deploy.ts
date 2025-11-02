@@ -105,15 +105,17 @@ export class Deploy {
         // 默认加入.dockerignore
         this.config.dockerBuildFiles.push('.dockerignore')
       }
+      let isEmptyFile = false
       this.config.dockerBuildFiles.forEach(async file => {
         const fullPath = path.resolve(this.context, file)
         if (fs._.existsSync(fullPath)) {
           files.push(fullPath)
         } else {
           log.error(`The file name is ${file}, and the file does not exist`)
-          throw new Error()
+          isEmptyFile = true
         }
       })
+      if (isEmptyFile) throw new Error()
     } else {
       log.error(
         `The file to build the image cannot be empty. Please check whether dockerBuildFiles is set correctly`,

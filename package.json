@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "Automated Docker deployment tool",
   "bin": {
-    "auto-deploy-sh": "./dist/bin/index.js"
+    "auto-deploy-sh": "./dist/cli/index.js"
   },
   "files": [
     "dist",
@@ -11,11 +11,11 @@
     "README.md"
   ],
   "type": "module",
-  "main": "./dist/bin/index.js",
+  "main": "./dist/cli/index.js",
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.bulid.json",
     "clean": "rimraf dist build",
-    "deploy": "node ./ts-node bin/index.ts",
+    "deploy": "node --loader ts-node/esm cli/index.ts",
     "lint:doc": "prettier **/*.md --check",
     "lint:doc:fix": "prettier **/*.md --write",
     "lint:eslint": "eslint --cache --ext .ts,.vue,.js,.jsx,.tsx,.json",
@@ -47,12 +47,12 @@
   "dependencies": {
     "archiver": "^7.0.1",
     "chalk": "^5.6.2",
+    "commander": "^13.1.0",
     "execa": "^9.6.0",
     "fs-extra": "^11.3.1",
     "inquirer": "^12.9.6",
     "node-ssh": "^13.2.1",
     "ora": "^8.2.0",
-    "readline-sync": "^1.4.10",
     "ssh2": "^1.17.0",
     "ts-node": "^10.9.2"
   },

@@ -6,11 +6,10 @@ import type { sshConfig } from './type/types.ts'
 import { Deploy } from './deploy.ts'
 import { createConfig } from './config.ts'
 
-const ssh = new NodeSSH()
-const CONFIG_FILE = 'deploy-config.json'
-const CONFIG_FILE_PATH: string = path.resolve(process.cwd(), `./${CONFIG_FILE}`)
-
-async function deploySSH() {
+export async function deploySSH(configFile: string = 'deploy-config.json') {
+  const ssh = new NodeSSH()
+  const CONFIG_FILE = configFile ?? 'deploy-config.json'
+  const CONFIG_FILE_PATH: string = path.resolve(process.cwd(), CONFIG_FILE)
   if (await fs.exist(CONFIG_FILE_PATH)) {
     let config = JSON.parse(
       (await fs.readDirOrFile(CONFIG_FILE_PATH, { encoding: 'utf-8' })) as string,
@@ -45,10 +44,11 @@ async function deploySSH() {
       await deploy.preBeforeRelease()
       await deploy.dockcerImageBuild(ssh)
     } catch {
-      exit(1)
+      // 防止重复错误抛出
     } finally {
       fs.removeSync(path.resolve(process.cwd(), deploy.uploadFileName))
       ssh.dispose()
+      exit(1)
     }
   } else {
     log.error(
@@ -58,5 +58,3 @@ async function deploySSH() {
     deploySSH()
   }
 }
-
-deploySSH()
