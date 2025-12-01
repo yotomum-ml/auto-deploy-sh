@@ -47,9 +47,9 @@ auto-deploy-sh
 运行**指定配置文件**：
 
 ```bash
-auto-deploy <config-path>
+auto-deploy-sh <config-path>
 # 或
-auto-deploy -f <config-path>
+auto-deploy-sh -f <config-path>
 ```
 
 用于适配不同环境的部署，常见的划分为开发环境、预发环境、线上环境。

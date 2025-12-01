@@ -49,9 +49,9 @@ auto-deploy-sh
 Run with a **custom configuration file**:
 
 ```bash
-auto-deploy <config-path>
+auto-deploy-sh <config-path>
 # OR
-auto-deploy -f <config-path>
+auto-deploy-sh -f <config-path>
 ```
 
 Useful for multi-environment deployment (e.g., development, staging, production).
