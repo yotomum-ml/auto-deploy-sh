@@ -145,7 +145,7 @@ export class Deploy {
       if (await fs.isDirectory(file)) {
         archive.directory(file, fileName)
       } else {
-        if (fileName === this.config.Dockerfile) {
+        if (this.config.Dockerfile && fileName === path.basename(this.config.Dockerfile)) {
           archive.file(file, { name: 'Dockerfile' })
           continue
         }
@@ -247,71 +247,13 @@ export class Deploy {
       `,
       )
 
-      // 构建容器 @TODO docker push 到远端的服务器,然后再通过远端的服务器进行拉取，这个平台可以进行版本控制和安全检测
-      await this.execCommand(
-        ssh,
-        {
-          startMsg: `🐳 Build image: ${IMAGE_TAG}...`,
-          succMsg: `🐳 Build image: ${IMAGE_TAG} success.`,
-        },
-        `
-        cd "${REMOTEAPPPATH}"
-        docker build -t ${IMAGE_TAG} ${TARGET_DIR}
-      `,
-      )
+      // 构建容器
+      await this.buildDocker(ssh, IMAGE_TAG, REMOTEAPPPATH, TARGET_DIR, CONTAINER_NAME)
 
-      // 清理旧容器
-      await this.execCommand(
-        ssh,
-        {
-          startMsg: `🔄 Stop and clean the old container.: ${CONTAINER_NAME}...`,
-          succMsg: `The old container has been successfully cleaned.`,
-        },
-        `
-        if docker inspect "${CONTAINER_NAME}" >/dev/null 2>&1; then
-          docker stop "${CONTAINER_NAME}";
-          docker rm "${CONTAINER_NAME}";
-        else
-          echo "ℹ️  container ${CONTAINER_NAME}. Does not exist, skip cleaning.";
-        fi
-      `,
-      )
+      // @TODO识别是否存在network
 
       // 启动容器
-      let optionsCLI = `--name ${CONTAINER_NAME} -p ${this.config.BindPorts}`
-      const options = this.config.Options
-      if (options) {
-        const optionsKeys = Object.keys(options)
-        if (optionsKeys.length > 0) {
-          for (let i = 0; i < optionsKeys.length; ++i) {
-            const key = optionsKeys[i]
-            switch (key) {
-              case 'volumes': {
-                let volumes = options.volumes.map(volume => `-v ${volume}`).join(' ')
-                optionsCLI += ' ' + volumes
-                break
-              }
-              case 'networks': {
-                optionsCLI += ` --network ${options.networks}`
-                break
-              }
-              default:
-                break
-            }
-          }
-        }
-      }
-      optionsCLI += ` ${this.config.imageTag}`
-      await this.execCommand(
-        ssh,
-        {
-          startMsg: `🐳 Start container: ${CONTAINER_NAME}...`,
-          succMsg: `🐳 Container started successfully.`,
-        },
-        `
-        docker run -d ${optionsCLI}
-      `,
-      )
+      await this.runDocker(ssh, CONTAINER_NAME)
 
       log.done('✔ Deployment completed.')
     } catch {
@@ -321,10 +263,87 @@ export class Deploy {
     }
   }
 
+  // 构建容器
+  async buildDocker(
+    ssh: NodeSSH,
+    IMAGE_TAG: string,
+    REMOTEAPPPATH: string,
+    TARGET_DIR: string,
+    CONTAINER_NAME: string,
+  ) {
+    // 构建容器 @TODO docker push 到远端的服务器,然后再通过远端的服务器进行拉取，这个平台可以进行版本控制和安全检测
+    await this.execCommand(
+      ssh,
+      {
+        startMsg: `🐳 Build image: ${IMAGE_TAG}...`,
+        succMsg: `🐳 Build image: ${IMAGE_TAG} success.`,
+      },
+      `
+        cd "${REMOTEAPPPATH}"
+        docker build -t ${IMAGE_TAG} ${TARGET_DIR}
+      `,
+    )
+
+    // 清理旧容器
+    await this.execCommand(
+      ssh,
+      {
+        startMsg: `🔄 Stop and clean the old container.: ${CONTAINER_NAME}...`,
+        succMsg: `The old container has been successfully cleaned.`,
+      },
+      `
+        if docker inspect "${CONTAINER_NAME}" >/dev/null 2>&1; then
+          docker stop "${CONTAINER_NAME}";
+          docker rm "${CONTAINER_NAME}";
+        else
+          echo "ℹ️  container ${CONTAINER_NAME}. Does not exist, skip cleaning.";
+        fi
+      `,
+    )
+  }
+
+  // 启动容器
+  async runDocker(ssh: NodeSSH, CONTAINER_NAME: string) {
+    let optionsCLI = `--name ${CONTAINER_NAME} -p ${this.config.BindPorts}`
+    const options = this.config.Options
+    if (options) {
+      const optionsKeys = Object.keys(options)
+      if (optionsKeys.length > 0) {
+        for (let i = 0; i < optionsKeys.length; ++i) {
+          const key = optionsKeys[i]
+          switch (key) {
+            case 'volumes': {
+              let volumes = options.volumes.map(volume => `-v ${volume}`).join(' ')
+              optionsCLI += ' ' + volumes
+              break
+            }
+            case 'networks': {
+              optionsCLI += ` --network ${options.networks}`
+              break
+            }
+            default:
+              break
+          }
+        }
+      }
+    }
+    optionsCLI += ` ${this.config.imageTag}`
+    await this.execCommand(
+      ssh,
+      {
+        startMsg: `🐳 Start container: ${CONTAINER_NAME}...`,
+        succMsg: `🐳 Container started successfully.`,
+      },
+      `
+        docker run -d ${optionsCLI}
+      `,
+    )
+  }
+
   async clear(ssh: NodeSSH) {
     await ssh.execCommand(`rm -f ${this.remotePath}`)
     await ssh.execCommand(`rm -rf ${this.REMOTEAPPPATH}/${this.config.containerName}`)
     await ssh.execCommand(`docker image prune -f`) // 清理悬空镜像
-    // 清空悬空的network
+    // @TODO清空悬空的network
   }
 }
