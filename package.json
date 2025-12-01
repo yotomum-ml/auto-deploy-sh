@@ -1,6 +1,6 @@
 {
   "name": "auto-deploy-sh",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Automated Docker deployment tool",
   "bin": {
     "auto-deploy-sh": "./dist/cli/index.js"
@@ -35,7 +35,7 @@
     "url": "https://github.com/yotomum-ml/auto-deploy-sh.git"
   },
   "author": "yotomum_ml",
-  "license": "ISC",
+  "license": "MIT",
   "lint-staged": {
     "*.{js,ts,jsx,tsx,vue,css,json}": [
       "eslint --no-warn-ignored"
