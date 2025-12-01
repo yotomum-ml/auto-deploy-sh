@@ -2,48 +2,21 @@
 
 English|[简体中文](README_zh_CN.md)
 
-Cloud service deployment is a crucial aspect of project engineering development and an important way to reach more users with applications. Currently, there are various methods for running projects on the cloud, among which **containerized deployment** has become the mainstream method for delivering cloud-native applications. The technology stack represented by **Docker + Kubernetes** can effectively address core issues such as **environment consistency, resource utilization, and portability** in the software development and deployment process ([Docker Official Documentation](https://docs.docker.com/)).
+This project aims to lower deployment barriers by providing an ultra-simple configuration and minimal dependency automated Docker deployment workflow. It helps developers quickly deploy applications to cloud servers without complex environment setups.
 
-In enterprise-level development, project deployment often relies on tools such as GitLab to establish a comprehensive **CI/CD** (Continuous Integration/Continuous Delivery) workflow. However, for individual developers or small teams, setting up and maintaining a complete CI/CD system is not only complex but also costly, making it difficult to implement quickly.
+## Deployment Commands
 
-So, how can individuals or small teams efficiently deploy projects? A common practice nowadays is to directly integrate Docker for deployment through an IDE (such as IntelliJ IDEA). However, this approach typically relies on **paid IDE versions**, requires cumbersome local configuration, and demands the installation of Docker CLI in the development environment, imposing certain technical thresholds and hardware and software requirements on users.
+### Project-Specific Configuration
 
-This project aims to **reduce the deployment threshold**, achieve an automated Docker deployment process with **minimal configuration and minimal dependencies**, and help developers quickly deploy applications to cloud servers without requiring complex environments.
+**Install:**
 
-## Explanation of configuration file attributes
-
-The configuration file name is fixed as `deploy-config.json` and stored in the root directory. Since it contains private information, if added manually, please add it to `.gitignore`.
-If the file is absent, the `CLI` will guide the addition process and update the content of `.gitignore` under the added location, requiring no additional operations.
-
-```javaScript
-{
-  input: 'Remote server IP or domain name',
-  port: 'SSH port',
-  user： 'Username',
-  password: 'password',
-  beforLaunch：[ // Preparation operations before project release
-    'npm run build'
-  ],
-  dockerBuildFiles: [
-    // The files involved in the construction, relative to the path where the script runs (usually the root directory of the project)
-    'Dockerfile',
-    'dist'
-  ],
-  // Format: [Warehouse Address/] [Username/Project Name]: [Label]
-  imageTag: 'Mirror identification',
-  containerName: 'Container Name', // Unique identifier of Docker running instance
-  BindPorts: 'Port Mapping' // Format: `<Host Port>:<Container Port>`
-}
+```bash
+npm install auto-deploy-sh -D
 ```
 
-## Package release
+**Run:**
 
-### Partial configuration of the project
-
-Download: `npm install auto-deploy-sh -D `
-Run:
-
-- package.json configuration
+- Add to `package.json`:
 
 ```json
 "scripts": {
@@ -51,7 +24,7 @@ Run:
 }
 ```
 
-- Console running
+2. Execute in terminal:
 
 ```bash
 npm run deploy
@@ -59,5 +32,90 @@ npm run deploy
 
 ### Global Configuration
 
-Download: `npm install auto-deploy-sh -g`
-Run in the root directory of the project that needs to be deployed: `auto-deploy-sh`
+**Install:**
+
+```bash
+npm install auto-deploy-sh -g
+```
+
+**Run** (in the root directory of the project to deploy):
+
+```bash
+auto-deploy-sh
+```
+
+### Advanced Usage
+
+Run with a **custom configuration file**:
+
+```bash
+auto-deploy <config-path>
+# OR
+auto-deploy -f <config-path>
+```
+
+Useful for multi-environment deployment (e.g., development, staging, production).
+
+## Configuration File Reference
+
+The configuration file is **fixed as `deploy-config.json`**. If missing, the tool will **guide you to create it** (stored in the command execution directory by default) and automatically add `deploy-config.json` to `.gitignore` to **prevent accidental commits of sensitive data**.
+
+> ⚠️ **Critical Note**: The configuration file contains sensitive information (e.g., passwords). If creating manually, ensure `deploy-config.json` is added to `.gitignore`.
+
+### Configuration Properties
+
+- `host`: Remote server IP address or domain name.
+- `port`: SSH port number.
+- `user`: SSH username for the remote server.
+- `password`: Password for the SSH user.
+- `beforLaunch`: **Pre-deployment commands** (array of strings) to execute locally before starting the deployment (e.g., `["npm run build"]`).
+- `Dockerfile`: **Optional**. If omitted: 1. Check `dockerBuildFiles` for a file named `Dockerfile`; 2. If not found, search for `Dockerfile` in the **first-level directory of the current execution environment**.
+- `dockerBuildFiles`: Files/directories to include in the Docker build context (required for Dockerfile execution).
+- `imageTag`: Docker image tag, formatted as `[registry-url/][username/project-name]:[tag]` (e.g., `my-registry.com/user/my-app:v1.0`).
+- `containerName`: Unique name for the running container (ensures no conflicts with existing containers).
+- `BindPorts`: Port mapping, formatted as `<host-port>:<container-port>` (e.g., `"8080:80"`).
+- `Options`: **Optional** advanced settings (all sub-properties are optional)
+  - `volumes`: Volume mappings (array of strings), formatted as `[host-path/volume-name]:[container-path]:[optional-flags]` (e.g., `["/host/data:/container/data:ro"]`).
+  - `networks`: Connect the container to a custom Docker network (created via `docker network create <network-name>`) for inter-container communication.
+
+### Format Introduction
+
+```json
+{
+  "host": "string",
+  "port": "number | string",
+  "user": "string",
+  "password": "string",
+  "beforLaunch": "string[]",
+  "Dockerfile": "string",
+  "dockerBuildFiles": "string[]",
+  "imageTag": "string",
+  "containerName": "string",
+  "BindPorts": "string",
+  "Options": {
+    "volumes": "string[]",
+    "networks": "string"
+  }
+}
+```
+
+### Full Configuration Example
+
+```json
+{
+  "host": "your-server-ip",
+  "port": 22,
+  "user": "ssh-username",
+  "password": "ssh-password",
+  "beforLaunch": ["npm run build"],
+  "Dockerfile": "./Dockerfile",
+  "dockerBuildFiles": ["./dist", "./package.json"],
+  "imageTag": "my-app:latest",
+  "containerName": "my-app-container",
+  "BindPorts": "80:80",
+  "Options": {
+    "volumes": ["/host/logs:/app/logs:rw"],
+    "networks": "my-custom-network"
+  }
+}
+```

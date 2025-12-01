@@ -2,44 +2,17 @@
 
 简体中文|[English](README.md)
 
-云服务部署是项目工程化开发的关键环节，也是让应用触达更多用户的重要途径。当前，云上运行项目的方式多种多样，其中**容器化部署**已成为主流的云原生应用交付方式，以 **Docker + Kubernetes** 为代表的技术栈，能够有效解决软件开发与部署过程中的**环境一致性、资源利用率和可移植性**等核心问题（[Docker 官方文档](https://docs.docker.com/)）。
-
-在企业级开发中，项目上线通常依赖 GitLab 等工具构建完整的 **CI/CD**（持续集成/持续交付）流程。然而，对于个人开发者或小型团队而言，搭建和维护一套完整的 CI/CD 系统不仅复杂，而且成本较高，难以快速落地。
-
-那么，个人或小团队如何高效地实现项目部署？目前常见的做法是通过 IDE（如 IntelliJ IDEA）直接集成 Docker 进行部署。但这种方式通常依赖**付费版 IDE**，需要繁琐的本地配置，且要求开发环境安装 Docker CLI，对使用者的技术门槛和软硬件条件有一定要求。
-
 本项目旨在**降低部署门槛**，实现**极简配置、最少依赖**的自动化 Docker 部署流程，帮助开发者无需复杂环境即可快速将应用部署到云服务器。
 
-## 配置文件属性讲解
-
-配置文件名固定为`deploy-config.json`，存放在根目录下，里面涉及隐私内容，如果是手动添加，请在`.gitignore`中添加。
-若无该文件，该`CLI`会引导添加，并在添加位置下的`.gitignore`内容，无须而外操作。
-
-```javaScript
-{
-  input: '远程服务器 IP 或域名',
-  port: 'SSH 端口',
-  user： '用户名',
-  password: '密码',
-  beforLaunch：[ // 项目发布前的准备操作
-    'npm run build'
-  ],
-  dockerBuildFiles: [ // 参与构建的文件，相对于运行脚本的路径(一般为项目的根目录)
-    'Dockerfile',
-    'dist'
-  ],
-  imageTag: '镜像标识', // 格式为[仓库地址/][用户名/项目名]:[标签]
-  containerName: '容器名', // docker 运行实例的唯一标识
-  BindPorts: '端口映射' // 格式为：`<宿主机端口>:<容器内端口>`
-}
-```
-
-## 打包发布
+## 发布命令
 
 ### 项目局部配置
 
-下载：`npm install auto-deploy-sh -D `
-运行：
+#### 下载
+
+`npm install auto-deploy-sh -D `
+
+#### 运行
 
 - package.json 配置
 
@@ -57,5 +30,90 @@ npm run deploy
 
 ### 全局配置
 
-下载：`npm install auto-deploy-sh -g`
-在需要部署的项目根目录下运行: `auto-deploy-sh`
+**下载：**
+
+```bash
+npm install auto-deploy-sh -g
+```
+
+**在需要部署的项目根目录下运行：**
+
+```bash
+auto-deploy-sh
+```
+
+### 进阶
+
+运行**指定配置文件**：
+
+```bash
+auto-deploy <config-path>
+# 或
+auto-deploy -f <config-path>
+```
+
+用于适配不同环境的部署，常见的划分为开发环境、预发环境、线上环境。
+
+## 配置文件属性讲解
+
+配置文件名固定为`deploy-config.json`，**若无该文件，会引导添加**（默认存放在运行命令的目录下），并在`.gitignore`中添加`deploy-config.json`，**避免部署配置文件提交**。
+
+> ⚠️ **关键提示**：配置文件包含敏感信息（例如密码）。如果手动创建，请确保将`deploy-config.json`添加到`.gitignore`中。
+
+### 相关属性讲解
+
+- `host`: 远程服务器 IP 或域名
+- `port`: SSH 端口
+- `user`: 用户名
+- `password`: 密码
+- `beforLaunch`: 项目**发布前的准备操作**，即需要在控制台执行的命令 (e.g., `["npm run build"]`)
+- `Dockerfile`: **可选**，如不填，**则在 dockerBuildFiles 配置内寻找是否具有名称为 Dockerfile 的文件**，若未找到，默认查找**当前运行环境目录下的第一层目录中是否存在 Dockerfile 文件**
+- `dockerBuildFiles`: **参与构建的文件**，需要打包进 docker 容器内的文件，即 Dockerfile 执行所涉及的上下文
+- `imageTag`: **镜像标识**，格式为`[仓库地址][用户名/项目名]:[标签]` (e.g., `my-registry.com/user/my-app:v1.0`)
+- `containerName`: **容器名**，运行实例的唯一标识
+- `BindPorts`: **端口映射**，格式为`<宿主机端口>:<容器内端口>` (e.g., `"8080:80"`)
+- `Options`: 下面所列的所有属性都是**可选**，即可不添加属性
+  - `volumes`: 用于设置**卷映射**，格式为`[宿主机路径/命名卷]:[容器内路径]:[可选权限标志]`的字符数组 (e.g., `["/host/data:/container/data:ro"]`)
+  - `networks`: 用于**连接容器内自建网络**，用于本地容器间的通信，值为 `docker network create <network-name>` 创建的网络名
+
+### 格式介绍
+
+```json
+{
+  "host": "string",
+  "port": "number | string",
+  "user": "string",
+  "password": "string",
+  "beforLaunch": "string[]",
+  "Dockerfile": "string",
+  "dockerBuildFiles": "string[]",
+  "imageTag": "string",
+  "containerName": "string",
+  "BindPorts": "string",
+  "Options": {
+    "volumes": "string[]",
+    "networks": "string"
+  }
+}
+```
+
+### 完整配置例子
+
+```json
+{
+  "host": "your-server-ip",
+  "port": 22,
+  "user": "ssh-username",
+  "password": "ssh-password",
+  "beforLaunch": ["npm run build"],
+  "Dockerfile": "./Dockerfile",
+  "dockerBuildFiles": ["./dist", "./package.json"],
+  "imageTag": "my-app:latest",
+  "containerName": "my-app-container",
+  "BindPorts": "80:80",
+  "Options": {
+    "volumes": ["/host/logs:/app/logs:rw"],
+    "networks": "my-custom-network"
+  }
+}
+```
