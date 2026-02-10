@@ -1,5 +1,5 @@
 import type { sshConfig } from './type/types'
-import { log, ora, run, fs, exit, chalk } from './utils/index.ts'
+import { log, ora, run, fs, exit, chalk, inquirer } from './utils/index.ts'
 import path from 'path'
 import archiver from 'archiver'
 import type { Options } from 'execa'
@@ -225,6 +225,12 @@ export class Deploy {
       const IMAGE_TAG = this.config.imageTag
       const TARGET_DIR = `./${CONTAINER_NAME}`
 
+      // 识别是否存在network
+      const networks = this.config.Options?.networks || []
+      if (networks.length > 0) {
+        await this.judgeNetwork(ssh, networks)
+      }
+
       // 解压压缩包
       await this.execCommand(
         ssh,
@@ -249,8 +255,6 @@ export class Deploy {
 
       // 构建容器
       await this.buildDocker(ssh, IMAGE_TAG, REMOTEAPPPATH, TARGET_DIR, CONTAINER_NAME)
-
-      // @TODO识别是否存在network
 
       // 启动容器
       await this.runDocker(ssh, CONTAINER_NAME)
@@ -305,6 +309,9 @@ export class Deploy {
   // 启动容器
   async runDocker(ssh: NodeSSH, CONTAINER_NAME: string) {
     let optionsCLI = `--name ${CONTAINER_NAME} -p ${this.config.BindPorts}`
+    if (this.config.restart) {
+      optionsCLI += ` --restart ${this.config.restart}`
+    }
     const options = this.config.Options
     if (options) {
       const optionsKeys = Object.keys(options)
@@ -318,7 +325,13 @@ export class Deploy {
               break
             }
             case 'networks': {
-              optionsCLI += ` --network ${options.networks}`
+              let cli = ''
+              if (Array.isArray(options.networks)) {
+                cli = options.networks.map((network: string) => `--network ${network}`).join(' ')
+              } else {
+                cli = `--network ${options.networks}`
+              }
+              optionsCLI += ` ${cli}`
               break
             }
             default:
@@ -338,6 +351,45 @@ export class Deploy {
         docker run -d ${optionsCLI}
       `,
     )
+  }
+
+  // 识别network是否存在，不存则提示创建
+  async judgeNetwork(ssh: NodeSSH, networks: string[]) {
+    // 1. 判断network是否存在，返回不存在的network列表
+    // 2. 不存则利用inquirer进行询问创建，取消则退出，统一则创建
+    const { stderr, code, stdout } = await ssh.execCommand(`docker network ls --format '{{.Name}}'`)
+    if (code !== 0 || (stderr && code !== 0)) {
+      stderr && log.error(stderr)
+      throw new Error()
+    }
+    const existNetworks = new Set(
+      stdout
+        .split('\n')
+        .map(item => item.trim())
+        .filter(Boolean),
+    )
+    const missingNetworks = networks.filter(network => !existNetworks.has(network))
+    if (missingNetworks.length > 0) {
+      // 存在不存在的network
+      const answer = await inquirer.invoke({
+        type: 'confirm',
+        message: `The following Docker networks do not exist:\n${JSON.stringify(missingNetworks)}\nDo you want to create them now?`,
+      })
+      if (answer) {
+        let cli = missingNetworks.map(name => `docker network create ${name}`).join(' && ')
+        await this.execCommand(
+          ssh,
+          {
+            startMsg: `Creating missing Docker networks...`,
+            succMsg: `Missing Docker networks created successfully.`,
+          },
+          cli,
+        )
+      } else {
+        log.error('Deployment aborted due to missing Docker networks.')
+        throw new Error()
+      }
+    }
   }
 
   async clear(ssh: NodeSSH) {

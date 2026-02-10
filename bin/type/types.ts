@@ -11,9 +11,10 @@ export type sshConfig = {
   imageTag: string
   containerName: string
   BindPorts: string
+  restart?: 'no' | 'always' | 'on-failure' | 'unless-stopped'
   Options: {
     volumes: string[]
-    networks: string
+    networks: string[]
   }
 }
 

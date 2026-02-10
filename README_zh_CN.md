@@ -72,6 +72,11 @@ auto-deploy-sh -f <config-path>
 - `imageTag`: **镜像标识**，格式为`[仓库地址][用户名/项目名]:[标签]` (e.g., `my-registry.com/user/my-app:v1.0`)
 - `containerName`: **容器名**，运行实例的唯一标识
 - `BindPorts`: **端口映射**，格式为`<宿主机端口>:<容器内端口>` (e.g., `"8080:80"`)
+- `restart`（**可选**）: **容器重启机制**，有以下四个选项：
+  - `no`（默认）: 容器**退出后不会自动重启**。当 Docker 服务或系统重启时，容器也不会自动启动，适用于一次性任务或调试场景。
+  - `always`: 容器一旦停止就会**始终自动重启**。在 Docker 服务或系统重启后，容器会自动启动。即使容器被手动停止，在 Docker 重启后仍会被再次拉起。
+  - `unless-stopped`（推荐）: 当容器异常退出时会自动重启，并在 Docker 服务或系统重启后自动启动；如果容器被用户手动停止，则不会再次自动启动，**适合长期运行的生产服务**。
+  - `on-failure`: **仅当容器以非 0 状态码退出**时才会自动重启，正常退出（exit code 为 0）不会重启。
 - `Options`: 下面所列的所有属性都是**可选**，即可不添加属性
   - `volumes`: 用于设置**卷映射**，格式为`[宿主机路径/命名卷]:[容器内路径]:[可选权限标志]`的字符数组 (e.g., `["/host/data:/container/data:ro"]`)
   - `networks`: 用于**连接容器内自建网络**，用于本地容器间的通信，值为 `docker network create <network-name>` 创建的网络名
@@ -90,9 +95,10 @@ auto-deploy-sh -f <config-path>
   "imageTag": "string",
   "containerName": "string",
   "BindPorts": "string",
+  "restart": "'no' | 'always' | 'unless-stopped' | 'on-failure'",
   "Options": {
     "volumes": "string[]",
-    "networks": "string"
+    "networks": "string[]"
   }
 }
 ```
@@ -111,9 +117,10 @@ auto-deploy-sh -f <config-path>
   "imageTag": "my-app:latest",
   "containerName": "my-app-container",
   "BindPorts": "80:80",
+  "restart": "unless-stopped",
   "Options": {
     "volumes": ["/host/logs:/app/logs:rw"],
-    "networks": "my-custom-network"
+    "networks": ["my-custom-network", "my-custom-network-1"]
   }
 }
 ```

@@ -46,6 +46,35 @@ const configMethod: { [key: string]: inquirerOptions } = {
     type: 'input',
     message: 'Bind Ports(such as 8080:8080): ',
   },
+  restart: {
+    type: 'select',
+    message: 'Container restart policy (when should Docker restart this container?)',
+    choices: [
+      {
+        name: 'no (default)',
+        value: 'no',
+        description: 'Never restart. Container stays stopped even after Docker or system restarts.',
+      },
+      {
+        name: 'always',
+        value: 'always',
+        description:
+          'Always restart if it stops. Will also start automatically after Docker or system reboot.',
+      },
+      {
+        name: 'unless-stopped (recommended)',
+        value: 'unless-stopped',
+        description:
+          'Restart automatically unless you manually stop it. Will NOT restart again if stopped by user.',
+      },
+      {
+        name: 'on-failure',
+        value: 'on-failure',
+        description:
+          'Restart only on non-zero exit code. Useful for jobs or scripts that may fail.',
+      },
+    ],
+  },
 }
 const optionsMethod: { [key: string]: inquirerOptions } = {
   volumes: {
@@ -55,7 +84,8 @@ const optionsMethod: { [key: string]: inquirerOptions } = {
   },
   networks: {
     type: 'input',
-    message: 'Bound network: ',
+    message: 'Bound networks (separated by , ): ',
+    handleFn: (value: string): string[] => value.split(','),
   },
 }
 

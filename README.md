@@ -74,6 +74,11 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
 - `imageTag`: Docker image tag, formatted as `[registry-url/][username/project-name]:[tag]` (e.g., `my-registry.com/user/my-app:v1.0`).
 - `containerName`: Unique name for the running container (ensures no conflicts with existing containers).
 - `BindPorts`: Port mapping, formatted as `<host-port>:<container-port>` (e.g., `"8080:80"`).
+- `restart` (optional): Container restart policy, controls how Docker handles container restarts. The following options are supported:
+  - `no`(default): The container **will not restart automatically after it exits**. It will also remain stopped after Docker or system restarts. Suitable for one-off tasks or debugging scenarios.
+  - `always`: The container **will always restart automatically** if it stops. It will also start automatically after Docker or system restarts.Even if the container is manually stopped, it will be restarted again after Docker restarts.
+  - `unless-stopped`(recommended): The container will automatically restart on failure and start after Docker or system restarts.**If the container is manually stopped, it will not be restarted again**, making it suitable for long-running production services.
+  - `on-failure`: The container **will restart only if it exits with a non-zero status code**. It will not restart on normal exits (exit code 0).
 - `Options`: **Optional** advanced settings (all sub-properties are optional)
   - `volumes`: Volume mappings (array of strings), formatted as `[host-path/volume-name]:[container-path]:[optional-flags]` (e.g., `["/host/data:/container/data:ro"]`).
   - `networks`: Connect the container to a custom Docker network (created via `docker network create <network-name>`) for inter-container communication.
@@ -92,9 +97,10 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   "imageTag": "string",
   "containerName": "string",
   "BindPorts": "string",
+  "restart": "'no' | 'always' | 'unless-stopped' | 'on-failure'",
   "Options": {
     "volumes": "string[]",
-    "networks": "string"
+    "networks": "string[]"
   }
 }
 ```
@@ -113,9 +119,10 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   "imageTag": "my-app:latest",
   "containerName": "my-app-container",
   "BindPorts": "80:80",
+  "restart": "unless-stopped",
   "Options": {
     "volumes": ["/host/logs:/app/logs:rw"],
-    "networks": "my-custom-network"
+    "networks": ["my-custom-network", "my-custom-network-1"]
   }
 }
 ```

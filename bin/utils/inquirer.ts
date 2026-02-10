@@ -38,7 +38,7 @@ export class inquirer {
         break
       case 'confirm':
         args.theme = {
-          prefix: chalk.warn('✔'),
+          prefix: chalk.warn('?'),
           style: {
             answer: (text: string) => chalk.done(text),
             error: (text: string) => chalk.error(text),
