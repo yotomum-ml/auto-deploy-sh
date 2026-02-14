@@ -226,6 +226,9 @@ export class Deploy {
       const TARGET_DIR = `./${CONTAINER_NAME}`
 
       // 识别是否存在network
+      if (typeof this.config.Options?.networks === 'string') {
+        this.config.Options.networks = [this.config.Options.networks]
+      }
       const networks = this.config.Options?.networks || []
       if (networks.length > 0) {
         await this.judgeNetwork(ssh, networks)
