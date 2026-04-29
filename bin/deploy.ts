@@ -311,7 +311,7 @@ export class Deploy {
 
   // 启动容器
   async runDocker(ssh: NodeSSH, CONTAINER_NAME: string) {
-    let optionsCLI = `--name ${CONTAINER_NAME} -p ${this.config.BindPorts}`
+    let optionsCLI = `--name ${CONTAINER_NAME}${this.config.BindPorts ? ` -p ${this.config.BindPorts}` : ''}`
     if (this.config.restart) {
       optionsCLI += ` --restart ${this.config.restart}`
     }

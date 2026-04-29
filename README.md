@@ -73,7 +73,7 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
 - `dockerBuildFiles`: Files/directories to include in the Docker build context (required for Dockerfile execution).
 - `imageTag`: Docker image tag, formatted as `[registry-url/][username/project-name]:[tag]` (e.g., `my-registry.com/user/my-app:v1.0`).
 - `containerName`: Unique name for the running container (ensures no conflicts with existing containers).
-- `BindPorts`: Port mapping, formatted as `<host-port>:<container-port>` (e.g., `"8080:80"`).
+- `BindPorts` (optional): Port mapping, formatted as `<host-port>:<container-port>` (e.g., `"8080:80"`).
 - `restart` (optional): Container restart policy, controls how Docker handles container restarts. The following options are supported:
   - `no`(default): The container **will not restart automatically after it exits**. It will also remain stopped after Docker or system restarts. Suitable for one-off tasks or debugging scenarios.
   - `always`: The container **will always restart automatically** if it stops. It will also start automatically after Docker or system restarts.Even if the container is manually stopped, it will be restarted again after Docker restarts.

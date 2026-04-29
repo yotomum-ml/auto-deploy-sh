@@ -14,7 +14,7 @@ export async function deploySSH(configFile: string = 'deploy-config.json') {
     let config = JSON.parse(
       (await fs.readDirOrFile(CONFIG_FILE_PATH, { encoding: 'utf-8' })) as string,
     ) as sshConfig
-    if (!config.BindPorts.includes(':')) {
+    if (config.BindPorts && !config.BindPorts.includes(':')) {
       log.error('Config BindPorts do not meet the standard')
       exit(1)
     }
