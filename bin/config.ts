@@ -87,6 +87,101 @@ const optionsMethod: { [key: string]: inquirerOptions } = {
     message: 'Bound networks (separated by , ): ',
     handleFn: (value: string): string[] => value.split(','),
   },
+  logging: {
+    type: 'confirm',
+    message: 'Do you want to enable Docker log management?',
+    default: false,
+    handleFn: async (value: boolean): Promise<Record<string, any>> => {
+      if (!value) return {}
+      const loggingDriver: inquirerOptions = {
+        type: 'select',
+        message: 'Select a logging driver for the container: ',
+        choices: [
+          {
+            name: 'json-file (default)',
+            value: 'json-file',
+            description:
+              'Write logs as JSON files on the host. Docker default and supports max-size/max-file.',
+          },
+          {
+            name: 'local (recommended)',
+            value: 'local',
+            description:
+              'Write logs in Docker local format. More efficient for local log rotation and disk usage.',
+          },
+          {
+            name: 'none',
+            value: 'none',
+            description:
+              'Disable container logging. Useful when logs are handled entirely by the app.',
+          },
+          {
+            name: 'syslog',
+            value: 'syslog',
+            description: 'Send logs to the syslog service.',
+          },
+          {
+            name: 'journald',
+            value: 'journald',
+            description: 'Send logs to systemd journald.',
+          },
+          {
+            name: 'gelf',
+            value: 'gelf',
+            description: 'Send logs to a Graylog Extended Log Format endpoint.',
+          },
+          {
+            name: 'fluentd',
+            value: 'fluentd',
+            description: 'Send logs to a Fluentd collector.',
+          },
+          {
+            name: 'awslogs',
+            value: 'awslogs',
+            description: 'Send logs to Amazon CloudWatch Logs.',
+          },
+          {
+            name: 'splunk',
+            value: 'splunk',
+            description: 'Send logs to Splunk using the HTTP Event Collector.',
+          },
+          {
+            name: 'gcplogs',
+            value: 'gcplogs',
+            description: 'Send logs to Google Cloud Logging.',
+          },
+        ],
+      }
+      const loggingMaxSize: inquirerOptions = {
+        type: 'input',
+        message: 'Logging max-size: (eg: 10m, 1g)',
+        default: '10m',
+      }
+      const loggingMaxFile: inquirerOptions = {
+        type: 'input',
+        message: 'Logging max-file: (eg: 3)',
+        default: '3',
+      }
+      const driver = await inquirer.invoke(loggingDriver)
+      let options: Record<string, any> = {
+        'max-size': await inquirer.invoke(loggingMaxSize),
+        'max-file': await inquirer.invoke(loggingMaxFile),
+      }
+
+      if (driver === 'json-file') {
+        const compress = await inquirer.invoke({
+          type: 'confirm',
+          message: 'Do you want to enable log compression?',
+          default: false,
+        })
+        options['compress'] = compress
+      }
+      return {
+        driver,
+        options: options,
+      }
+    },
+  },
 }
 
 export async function createConfig(rootPath: string) {
@@ -101,7 +196,7 @@ export async function createConfig(rootPath: string) {
           else return value
         }
     const value = (await inquirer.invoke(configMethod[key]!)) as string
-    config[key] = fn(value)
+    config[key] = await fn(value)
   }
   // Extended options
   const options = await inquirer.invoke({
@@ -110,6 +205,7 @@ export async function createConfig(rootPath: string) {
     choices: [
       { name: 'Volumes', value: 'volumes' },
       { name: 'Networks', value: 'networks' },
+      { name: 'Logging', value: 'logging' },
     ],
   })
   config['Options'] = {}
@@ -122,7 +218,7 @@ export async function createConfig(rootPath: string) {
           else return value
         }
     const value = (await inquirer.invoke(optionsMethod[key]!)) as string
-    config['Options'][key] = fn(value)
+    config['Options'][key] = await fn(value)
   }
   await fs.writeFileSync(
     path.resolve(rootPath, 'deploy-config.json'),

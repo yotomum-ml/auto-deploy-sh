@@ -337,6 +337,41 @@ export class Deploy {
               optionsCLI += ` ${cli}`
               break
             }
+            case 'logging': {
+              if (options.logging && options.logging.driver) {
+                const logDriver = options.logging.driver.trim()
+                const { stderr, code, stdout } = await ssh.execCommand(
+                  `docker info --format '{{.LoggingDriver}}|{{json .Plugins.Log}}'`,
+                )
+                if (code !== 0 || (stderr && code !== 0)) {
+                  stderr && log.error(stderr)
+                  throw new Error('Failed to get Docker logging information.')
+                }
+                const [defaultLogDriver, supportedLogDriversJson = '[]'] = stdout.trim().split('|')
+                const supportedLogDrivers = JSON.parse(supportedLogDriversJson) as string[]
+                if (!supportedLogDrivers.includes(logDriver)) {
+                  log.error(
+                    `Docker logging driver "${logDriver}" is not supported by the remote Docker daemon. ` +
+                      `Current default driver is "${defaultLogDriver}", supported drivers are: ${supportedLogDrivers.join(', ')}`,
+                  )
+                  throw new Error()
+                }
+                optionsCLI += ` --log-driver ${logDriver}`
+                if (options.logging.options) {
+                  const logOptions = options.logging.options
+                  const logOptionsKeys = Object.keys(logOptions)
+                  for (let j = 0; j < logOptionsKeys.length; ++j) {
+                    const logKey = logOptionsKeys[j]
+                    const logValue = logOptions[logKey as keyof typeof logOptions]
+
+                    if (logValue !== undefined) {
+                      optionsCLI += ` --log-opt ${logKey}=${logValue}`
+                    }
+                  }
+                }
+              }
+              break
+            }
             default:
               break
           }

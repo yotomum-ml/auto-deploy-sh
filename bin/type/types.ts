@@ -15,6 +15,14 @@ export type sshConfig = {
   Options: {
     volumes: string[]
     networks: string[]
+    logging: {
+      driver?: string
+      options?: {
+        'max-size': string
+        'max-file': string
+        compress?: boolean
+      }
+    }
   }
 }
 

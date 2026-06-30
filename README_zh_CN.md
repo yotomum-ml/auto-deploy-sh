@@ -80,6 +80,12 @@ auto-deploy-sh -f <config-path>
 - `Options`: 下面所列的所有属性都是**可选**，即可不添加属性
   - `volumes`: 用于设置**卷映射**，格式为`[宿主机路径/命名卷]:[容器内路径]:[可选权限标志]`的字符数组 (e.g., `["/host/data:/container/data:ro"]`)
   - `networks`: 用于**连接容器内自建网络**，用于本地容器间的通信，值为 `docker network create <network-name>` 创建的网络名
+  - `logging`: 用于设置**容器日志管理**，部署时会转换为 Docker 的 `--log-driver` 和 `--log-opt` 参数。部署前会读取远程 Docker 支持的日志驱动，如果配置的 `driver` 不在远程 Docker 支持列表中，将终止部署并提示当前默认驱动和支持的驱动列表。
+    - `driver`: 日志驱动，当前引导支持 `json-file`、`local`、`none`、`syslog`、`journald`、`gelf`、`fluentd`、`awslogs`、`splunk`、`gcplogs`。
+    - `options`: 日志驱动参数，会按 `--log-opt key=value` 传递给 `docker run`。
+    - `options.max-size`: 单个日志文件的最大大小，默认引导值为 `10m`。
+    - `options.max-file`: 保留的日志文件数量，默认引导值为 `3`。
+    - `options.compress`: 是否启用日志压缩，当前引导在选择 `json-file` 时会询问该配置。
 
 ### 格式介绍
 
@@ -98,7 +104,15 @@ auto-deploy-sh -f <config-path>
   "restart": "'no' | 'always' | 'unless-stopped' | 'on-failure'",
   "Options": {
     "volumes": "string[]",
-    "networks": "string[]"
+    "networks": "string[]",
+    "logging": {
+      "driver": "'json-file' | 'local' | 'none' | 'syslog' | 'journald' | 'gelf' | 'fluentd' | 'awslogs' | 'splunk' | 'gcplogs'",
+      "options": {
+        "max-size": "string",
+        "max-file": "string",
+        "compress": "boolean"
+      }
+    }
   }
 }
 ```
@@ -120,7 +134,15 @@ auto-deploy-sh -f <config-path>
   "restart": "unless-stopped",
   "Options": {
     "volumes": ["/host/logs:/app/logs:rw"],
-    "networks": ["my-custom-network", "my-custom-network-1"]
+    "networks": ["my-custom-network", "my-custom-network-1"],
+    "logging": {
+      "driver": "json-file",
+      "options": {
+        "max-size": "10m",
+        "max-file": "3",
+        "compress": true
+      }
+    }
   }
 }
 ```

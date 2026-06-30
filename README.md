@@ -82,6 +82,12 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
 - `Options`: **Optional** advanced settings (all sub-properties are optional)
   - `volumes`: Volume mappings (array of strings), formatted as `[host-path/volume-name]:[container-path]:[optional-flags]` (e.g., `["/host/data:/container/data:ro"]`).
   - `networks`: Connect the container to a custom Docker network (created via `docker network create <network-name>`) for inter-container communication.
+  - `logging`: Docker log management configuration. During deployment, it is converted to Docker `--log-driver` and `--log-opt` arguments. Before starting the container, the tool checks the logging drivers supported by the remote Docker daemon. If the configured `driver` is not supported, deployment stops and prints the current default driver and supported driver list.
+    - `driver`: Logging driver. The interactive guide currently supports `json-file`, `local`, `none`, `syslog`, `journald`, `gelf`, `fluentd`, `awslogs`, `splunk`, and `gcplogs`.
+    - `options`: Logging driver options passed to `docker run` as `--log-opt key=value`.
+    - `options.max-size`: Maximum size of a single log file. The guided default is `10m`.
+    - `options.max-file`: Number of rotated log files to keep. The guided default is `3`.
+    - `options.compress`: Whether to enable log compression. The interactive guide asks for this option when `json-file` is selected.
 
 ### Format Introduction
 
@@ -100,7 +106,15 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   "restart": "'no' | 'always' | 'unless-stopped' | 'on-failure'",
   "Options": {
     "volumes": "string[]",
-    "networks": "string[]"
+    "networks": "string[]",
+    "logging": {
+      "driver": "'json-file' | 'local' | 'none' | 'syslog' | 'journald' | 'gelf' | 'fluentd' | 'awslogs' | 'splunk' | 'gcplogs'",
+      "options": {
+        "max-size": "string",
+        "max-file": "string",
+        "compress": "boolean"
+      }
+    }
   }
 }
 ```
@@ -122,7 +136,15 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   "restart": "unless-stopped",
   "Options": {
     "volumes": ["/host/logs:/app/logs:rw"],
-    "networks": ["my-custom-network", "my-custom-network-1"]
+    "networks": ["my-custom-network", "my-custom-network-1"],
+    "logging": {
+      "driver": "json-file",
+      "options": {
+        "max-size": "10m",
+        "max-file": "3",
+        "compress": true
+      }
+    }
   }
 }
 ```
