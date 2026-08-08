@@ -46,7 +46,7 @@ export async function deploySSH(configFile: string = 'deploy-config.json') {
     } catch {
       // 防止重复错误抛出
     } finally {
-      fs.removeSync(path.resolve(process.cwd(), deploy.uploadFileName))
+      await fs.remove(path.resolve(process.cwd(), deploy.uploadFileName))
       ssh.dispose()
       exit(1)
     }
