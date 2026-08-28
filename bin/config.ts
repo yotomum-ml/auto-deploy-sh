@@ -77,6 +77,27 @@ const configMethod: { [key: string]: inquirerOptions } = {
   },
 }
 const optionsMethod: { [key: string]: inquirerOptions } = {
+  permission: {
+    type: 'confirm',
+    message: 'Do you want to set the container user permissions?',
+    default: false,
+    handleFn: async (value: boolean): Promise<Record<string, any>> => {
+      if (!value) return {}
+      const gid = await inquirer.invoke({
+        type: 'input',
+        message: 'GID (Group ID): ',
+      })
+      const uid = await inquirer.invoke({
+        type: 'input',
+        message: 'UID (User ID): ',
+      })
+      if (!gid && !uid) return {}
+      const options: Record<string, any> = {}
+      if (gid) options.gid = gid
+      if (uid) options.uid = uid
+      return options
+    },
+  },
   volumes: {
     type: 'input',
     message: 'Multiple volumes are divided into by , : ',

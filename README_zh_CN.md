@@ -78,6 +78,9 @@ auto-deploy-sh -f <config-path>
   - `unless-stopped`（推荐）: 当容器异常退出时会自动重启，并在 Docker 服务或系统重启后自动启动；如果容器被用户手动停止，则不会再次自动启动，**适合长期运行的生产服务**。
   - `on-failure`: **仅当容器以非 0 状态码退出**时才会自动重启，正常退出（exit code 为 0）不会重启。
 - `Options`: 下面所列的所有属性都是**可选**，即可不添加属性
+  - `permission`: 用于设置 **Docker 构建阶段的用户/用户组参数**。部署时会转换为 `docker build --build-arg UID=<uid> --build-arg GID=<gid>`；Dockerfile 需要声明并使用 `ARG UID`、`ARG GID` 后才会生效。
+    - `uid`: 用户 ID，会作为 `UID` build arg 传入。
+    - `gid`: 用户组 ID，会作为 `GID` build arg 传入。
   - `volumes`: 用于设置**卷映射**，格式为`[宿主机路径/命名卷]:[容器内路径]:[可选权限标志]`的字符数组 (e.g., `["/host/data:/container/data:ro"]`)
   - `networks`: 用于**连接容器内自建网络**，用于本地容器间的通信，值为 `docker network create <network-name>` 创建的网络名
   - `logging`: 用于设置**容器日志管理**，部署时会转换为 Docker 的 `--log-driver` 和 `--log-opt` 参数。部署前会读取远程 Docker 支持的日志驱动，如果配置的 `driver` 不在远程 Docker 支持列表中，将终止部署并提示当前默认驱动和支持的驱动列表。
@@ -103,6 +106,10 @@ auto-deploy-sh -f <config-path>
   "BindPorts": "string",
   "restart": "'no' | 'always' | 'unless-stopped' | 'on-failure'",
   "Options": {
+    "permission": {
+      "uid": "string",
+      "gid": "string"
+    },
     "volumes": "string[]",
     "networks": "string[]",
     "logging": {
@@ -133,6 +140,10 @@ auto-deploy-sh -f <config-path>
   "BindPorts": "80:80",
   "restart": "unless-stopped",
   "Options": {
+    "permission": {
+      "uid": "1000",
+      "gid": "1000"
+    },
     "volumes": ["/host/logs:/app/logs:rw"],
     "networks": ["my-custom-network", "my-custom-network-1"],
     "logging": {

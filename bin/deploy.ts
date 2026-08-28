@@ -279,6 +279,12 @@ export class Deploy {
     CONTAINER_NAME: string,
   ) {
     // 构建容器 @TODO docker push 到远端的服务器,然后再通过远端的服务器进行拉取，这个平台可以进行版本控制和安全检测
+    const options = this.config.Options || {}
+    const gid = options.permission?.gid || ''
+    const uid = options.permission?.uid || ''
+    const buildArgs = [uid ? `--build-arg UID=${uid}` : '', gid ? `--build-arg GID=${gid}` : '']
+      .filter(Boolean)
+      .join(' ')
     await this.execCommand(
       ssh,
       {
@@ -287,7 +293,7 @@ export class Deploy {
       },
       `
         cd "${REMOTEAPPPATH}"
-        docker build -t ${IMAGE_TAG} ${TARGET_DIR}
+        docker build ${buildArgs} -t ${IMAGE_TAG} ${TARGET_DIR}
       `,
     )
 

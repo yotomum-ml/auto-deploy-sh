@@ -13,6 +13,10 @@ export type sshConfig = {
   BindPorts: string
   restart?: 'no' | 'always' | 'on-failure' | 'unless-stopped'
   Options: {
+    permission?: {
+      gid?: string
+      uid?: string
+    }
     volumes: string[]
     networks: string[]
     logging: {

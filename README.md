@@ -80,6 +80,9 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   - `unless-stopped`(recommended): The container will automatically restart on failure and start after Docker or system restarts.**If the container is manually stopped, it will not be restarted again**, making it suitable for long-running production services.
   - `on-failure`: The container **will restart only if it exits with a non-zero status code**. It will not restart on normal exits (exit code 0).
 - `Options`: **Optional** advanced settings (all sub-properties are optional)
+  - `permission`: Build-time user/group settings. During deployment, they are converted to `docker build --build-arg UID=<uid> --build-arg GID=<gid>`. The Dockerfile must declare and use `ARG UID` and `ARG GID` for these values to take effect.
+    - `uid`: User ID passed as the `UID` build arg.
+    - `gid`: Group ID passed as the `GID` build arg.
   - `volumes`: Volume mappings (array of strings), formatted as `[host-path/volume-name]:[container-path]:[optional-flags]` (e.g., `["/host/data:/container/data:ro"]`).
   - `networks`: Connect the container to a custom Docker network (created via `docker network create <network-name>`) for inter-container communication.
   - `logging`: Docker log management configuration. During deployment, it is converted to Docker `--log-driver` and `--log-opt` arguments. Before starting the container, the tool checks the logging drivers supported by the remote Docker daemon. If the configured `driver` is not supported, deployment stops and prints the current default driver and supported driver list.
@@ -105,6 +108,10 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   "BindPorts": "string",
   "restart": "'no' | 'always' | 'unless-stopped' | 'on-failure'",
   "Options": {
+    "permission": {
+      "uid": "string",
+      "gid": "string"
+    },
     "volumes": "string[]",
     "networks": "string[]",
     "logging": {
@@ -135,6 +142,10 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   "BindPorts": "80:80",
   "restart": "unless-stopped",
   "Options": {
+    "permission": {
+      "uid": "1000",
+      "gid": "1000"
+    },
     "volumes": ["/host/logs:/app/logs:rw"],
     "networks": ["my-custom-network", "my-custom-network-1"],
     "logging": {
