@@ -262,6 +262,21 @@ export class Deploy {
       // 启动容器
       await this.runDocker(ssh, CONTAINER_NAME)
 
+      // 自定义命令执行
+      if (this.config.afterLaunch && Array.isArray(this.config.afterLaunch)) {
+        await this.execCommand(
+          ssh,
+          {
+            startMsg: 'Start executing afterLaunch commands....',
+            succMsg: 'afterLaunch commands completed.',
+          },
+          `
+              cd "${REMOTEAPPPATH}/${CONTAINER_NAME}"
+              ${this.config.afterLaunch.join(' && ')}
+          `,
+        )
+      }
+
       log.done('✔ Deployment completed.')
     } catch {
       log.error('✖ Deployment failed.')
@@ -392,7 +407,7 @@ export class Deploy {
         succMsg: `🐳 Container started successfully.`,
       },
       `
-        docker run -d ${optionsCLI}
+        docker run -d ${optionsCLI} ${this.config.customRunOptions || ''}
       `,
     )
   }

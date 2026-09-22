@@ -75,6 +75,15 @@ const configMethod: { [key: string]: inquirerOptions } = {
       },
     ],
   },
+  afterLaunch: {
+    type: 'input',
+    message: 'After launch (multiple commands separated by , ): ',
+    handleFn: (value: string): string[] => value.split(','),
+  },
+  customRunOptions: {
+    type: 'input',
+    message: 'Custom run options (optional): eg: --env-file ./env.list',
+  },
 }
 const optionsMethod: { [key: string]: inquirerOptions } = {
   permission: {

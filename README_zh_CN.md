@@ -77,6 +77,8 @@ auto-deploy-sh -f <config-path>
   - `always`: 容器一旦停止就会**始终自动重启**。在 Docker 服务或系统重启后，容器会自动启动。即使容器被手动停止，在 Docker 重启后仍会被再次拉起。
   - `unless-stopped`（推荐）: 当容器异常退出时会自动重启，并在 Docker 服务或系统重启后自动启动；如果容器被用户手动停止，则不会再次自动启动，**适合长期运行的生产服务**。
   - `on-failure`: **仅当容器以非 0 状态码退出**时才会自动重启，正常退出（exit code 为 0）不会重启。
+- `afterLaunch`（**可选**）: 容器启动后在远程服务器执行的**后置命令**数组。命令会在 `/tmp/www/app/<containerName>` 目录下按 `&&` 串联执行；如果其中一个命令失败，后续命令会跳过并标记部署失败 (e.g., `["docker ps", "curl -f http://localhost/health"]`)。
+- `customRunOptions`（**可选**）: 追加到 `docker run` 命令末尾、镜像标签之后的自定义内容，可用于传入自定义容器启动命令或参数 (e.g., `"--env-file ./env.list"`)。
 - `Options`: 下面所列的所有属性都是**可选**，即可不添加属性
   - `permission`: 用于设置 **Docker 构建阶段的用户/用户组参数**。部署时会转换为 `docker build --build-arg UID=<uid> --build-arg GID=<gid>`；Dockerfile 需要声明并使用 `ARG UID`、`ARG GID` 后才会生效。
     - `uid`: 用户 ID，会作为 `UID` build arg 传入。
@@ -105,6 +107,8 @@ auto-deploy-sh -f <config-path>
   "containerName": "string",
   "BindPorts": "string",
   "restart": "'no' | 'always' | 'unless-stopped' | 'on-failure'",
+  "afterLaunch": "string[]",
+  "customRunOptions": "string",
   "Options": {
     "permission": {
       "uid": "string",
@@ -139,6 +143,8 @@ auto-deploy-sh -f <config-path>
   "containerName": "my-app-container",
   "BindPorts": "80:80",
   "restart": "unless-stopped",
+  "afterLaunch": ["docker ps", "curl -f http://localhost/health"],
+  "customRunOptions": "npm run start:prod",
   "Options": {
     "permission": {
       "uid": "1000",

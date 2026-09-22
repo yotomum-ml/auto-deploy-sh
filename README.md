@@ -24,7 +24,7 @@ npm install auto-deploy-sh -D
 }
 ```
 
-2. Execute in terminal:
+- Execute in terminal:
 
 ```bash
 npm run deploy
@@ -79,6 +79,8 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   - `always`: The container **will always restart automatically** if it stops. It will also start automatically after Docker or system restarts.Even if the container is manually stopped, it will be restarted again after Docker restarts.
   - `unless-stopped`(recommended): The container will automatically restart on failure and start after Docker or system restarts.**If the container is manually stopped, it will not be restarted again**, making it suitable for long-running production services.
   - `on-failure`: The container **will restart only if it exits with a non-zero status code**. It will not restart on normal exits (exit code 0).
+- `afterLaunch` (optional): **Post-start commands** (array of strings) to execute on the remote server after the container starts. Commands run from `/tmp/www/app/<containerName>` and are chained with `&&`, so if one command fails, the following commands are skipped and the deployment is marked as failed (e.g., `["docker ps", "curl -f http://localhost/health"]`).
+- `customRunOptions` (optional): Custom content appended to the end of the `docker run` command after the image tag. It can be used to pass a custom container startup command or arguments (e.g., `"--env-file ./env.list"`).
 - `Options`: **Optional** advanced settings (all sub-properties are optional)
   - `permission`: Build-time user/group settings. During deployment, they are converted to `docker build --build-arg UID=<uid> --build-arg GID=<gid>`. The Dockerfile must declare and use `ARG UID` and `ARG GID` for these values to take effect.
     - `uid`: User ID passed as the `UID` build arg.
@@ -107,6 +109,8 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   "containerName": "string",
   "BindPorts": "string",
   "restart": "'no' | 'always' | 'unless-stopped' | 'on-failure'",
+  "afterLaunch": "string[]",
+  "customRunOptions": "string",
   "Options": {
     "permission": {
       "uid": "string",
@@ -141,6 +145,8 @@ The configuration file is **fixed as `deploy-config.json`**. If missing, the too
   "containerName": "my-app-container",
   "BindPorts": "80:80",
   "restart": "unless-stopped",
+  "afterLaunch": ["docker ps", "curl -f http://localhost/health"],
+  "customRunOptions": "npm run start:prod",
   "Options": {
     "permission": {
       "uid": "1000",

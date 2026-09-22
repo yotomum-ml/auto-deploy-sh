@@ -12,6 +12,7 @@ export type sshConfig = {
   containerName: string
   BindPorts: string
   restart?: 'no' | 'always' | 'on-failure' | 'unless-stopped'
+  afterLaunch?: string[]
   Options: {
     permission?: {
       gid?: string
@@ -28,6 +29,7 @@ export type sshConfig = {
       }
     }
   }
+  customRunOptions?: string
 }
 
 export type fileData = string | NodeJS.ArrayBufferView
